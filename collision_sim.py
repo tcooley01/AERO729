@@ -18,8 +18,8 @@ class ParticleEnviroment():
                  num_particles: int,
                  run_time: float,
                  init_velocity: str = 'unit_horizontal',
-                 circle_radius: float = 0.2,
-                 box_length: float = 1):
+                 circle_radius: float = 2,
+                 box_length: float = 10):
         
         #box edges
         self.edges = [box_length/2, -box_length/2]
@@ -41,15 +41,15 @@ class ParticleEnviroment():
         #populate particles
         for i in range(num_particles):
 
-            pos = np.random.rand(2) - 0.5
+            pos = np.random.uniform(low = -5, high=5, size=2)
             while np.linalg.norm(pos, ord = 2) <= self.sigma:
-                pos = np.random.rand(2) - 0.5
+                pos = np.random.uniform(low = -5, high=5, size=2)
 
             if init_velocity == 'unit_horizontal':
             
                 particle = {
                 'particle_number'  : i,
-                'velocity'         : np.array([0.1, 0]),
+                'velocity'         : np.array([1, 0]),
                 'position'         : pos,
                 'number_collisions': 0,
                 'collision_times'  : [] 
