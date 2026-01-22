@@ -56,10 +56,11 @@ class ParticleEnviroment():
                 }
 
             if init_velocity == 'random':
-
+                velocity = np.random.rand(2)
+                velocity /= np.linalg.norm(velocity, ord=2)
                 particle = {
                 'particle_number'  : i,
-                'velocity'         : np.random.rand(2),
+                'velocity'         : velocity,
                 'position'         : pos,
                 'number_collisions': 0,
                 'collision_times'  : []                   
