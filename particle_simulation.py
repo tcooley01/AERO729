@@ -74,3 +74,15 @@ def calulate_reflection(position: NDArray,
     v_new = velocity - 2*(np.dot(normal_vec, velocity))*normal_vec
 
     return v_new
+
+def approximate_collisions(num_particles: int,
+                           lmb: float,
+                           tau: float
+                           ) -> NDArray:
+    
+    collisions = np.random.poisson(
+        lam = lmb*tau,
+        size = num_particles
+    )    
+
+    return collisions
