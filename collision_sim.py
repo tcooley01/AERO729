@@ -41,7 +41,7 @@ class ParticleEnviroment():
         #populate particles
         for i in range(num_particles):
 
-            pos = np.random.uniform(low = -5, high=5, size=2)
+            pos = np.random.uniform(low = -box_length/2, high = box_length/2, size=2)
             while np.linalg.norm(pos, ord = 2) <= self.sigma:
                 pos = np.random.uniform(low = -5, high=5, size=2)
 
