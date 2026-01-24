@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 def calculate_circle_collision(position: NDArray,
                                velocity: NDArray,
                                radius: float
-                               )-> float | bool:
+                               ) -> float | bool:
     
     t_2 = velocity[0]**2 + velocity[1]**2
     t = 2*(velocity[0]*position[0] + velocity[1]*position[1]) 
@@ -19,7 +19,6 @@ def calculate_circle_collision(position: NDArray,
     if roots[0] < 0:
         return False
     
-
     return float(np.min(roots))
 
 def calculate_collision_point(position: NDArray,
@@ -65,11 +64,9 @@ def calculate_square_collision(position: NDArray,
     
 def calulate_reflection(position: NDArray,
                         velocity: NDArray
-                        ) ->  NDArray:
+                        ) -> NDArray:
     
-    normal_angle = np.arctan(position[1]/position[0])
-    normal_vec = np.array([np.cos(normal_angle), np.sin(normal_angle)])
-    normal_vec /= np.linalg.norm(normal_vec)
+    normal_vec = position/np.linalg.norm(position, ord=2)
 
     v_new = velocity - 2*(np.dot(normal_vec, velocity))*normal_vec
 
@@ -81,8 +78,8 @@ def approximate_collisions(num_particles: int,
                            ) -> NDArray:
     
     collisions = np.random.poisson(
-        lam = lmb*tau,
-        size = num_particles
+        lam=lmb*tau,
+        size=num_particles
     )    
 
     return collisions

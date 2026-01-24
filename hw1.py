@@ -2,6 +2,7 @@
 """
 University of Michigan HW 1 
 
+
 Created on Wed Jan 21 10:46:29 2026
 
 @author: 343684

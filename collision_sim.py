@@ -1,7 +1,4 @@
-from typing import Generator, Any, Optional
-
-import random
-import math
+from typing import Generator, Any
 
 import numpy as np
 import simpy as sp
@@ -29,7 +26,7 @@ class ParticleEnviroment():
         self.run_time = run_time
 
         # dictionary of cosine directions of velocity
-        self.cosine_angles = {}
+        self.velocity_angles = {}
         self.time_between_measures = run_time/num_measurements
 
         # dictionary of particles
@@ -45,7 +42,10 @@ class ParticleEnviroment():
         # populate particles
         for i in range(num_particles):
 
-            pos = np.random.uniform(low=-box_length/2, high=box_length/2, size=2)
+            pos = np.random.uniform(
+                    low=-box_length/2, high=box_length/2, size=2
+                    )
+
             while np.linalg.norm(pos, ord=2) <= self.sigma:
                 pos = np.random.uniform(low=-5, high=5, size=2)
 
@@ -60,8 +60,9 @@ class ParticleEnviroment():
                 }
 
             else:
-                velocity = np.random.rand(2)
-                velocity /= np.linalg.norm(velocity, ord=2)
+                velocity = 2*np.pi*np.random.rand(2)
+                velocity[0] = np.cos(velocity[0])
+                velocity[1] = np.sin(velocity[1])
                 particle = {
                     'particle_number': i,
                     'velocity': velocity,
@@ -76,16 +77,17 @@ class ParticleEnviroment():
         
         while True:
 
-            cosine_angles = np.zeros(self.num_particles)
+            angles = np.zeros(self.num_particles)
         
             for i, particle in enumerate(self.particles.values()):
-                cosine_angles[i] = float(np.cos(
-                        np.arctan(
-                            particle['velocity'][1]/particle['velocity'][0]
-                            )
-                        ))
+                angles[i] = float(
+                    np.arctan2(
+                        particle['velocity'][1],
+                        particle['velocity'][0]
+                             )
+                                 )
 
-            self.cosine_angles[f'time_{self.env.now}'] = cosine_angles
+            self.velocity_angles[f'time_{self.env.now}'] = angles
 
             yield self.env.timeout(self.time_between_measures)
 
