@@ -19,54 +19,75 @@ class ParticleEnviroment():
                  run_time: float,
                  init_velocity: str = 'unit_horizontal',
                  circle_radius: float = 2,
-                 box_length: float = 10):
+                 box_length: float = 10,
+                 num_measurements: int = 5):
         
-        #box edges
+        # box edges
         self.edges = [box_length/2, -box_length/2]
         self.box_length = box_length
         self.sigma = circle_radius
         self.run_time = run_time
 
+        # dictionary of cosine directions of velocity
+        self.cosine_angles = {}
+        self.time_between_measures = run_time/num_measurements
 
-        #dictionary of particles
+        # dictionary of particles
         self.num_particles = num_particles
         self.particles = {}
 
-        #simpy env
+        # simpy env
         self.env = sp.Environment()
 
-        #cumulative collisions
+        # cumulative collisions
         self.cumulative_collisions = 0
 
-        #populate particles
+        # populate particles
         for i in range(num_particles):
 
-            pos = np.random.uniform(low = -box_length/2, high = box_length/2, size=2)
-            while np.linalg.norm(pos, ord = 2) <= self.sigma:
-                pos = np.random.uniform(low = -5, high=5, size=2)
+            pos = np.random.uniform(low=-box_length/2, high=box_length/2, size=2)
+            while np.linalg.norm(pos, ord=2) <= self.sigma:
+                pos = np.random.uniform(low=-5, high=5, size=2)
 
             if init_velocity == 'unit_horizontal':
             
                 particle = {
-                'particle_number'  : i,
-                'velocity'         : np.array([1, 0]),
-                'position'         : pos,
-                'number_collisions': 0,
-                'collision_times'  : [] 
+                    'particle_number': i,
+                    'velocity': np.array([1, 0]),
+                    'position': pos,
+                    'number_collisions': 0,
+                    'collision_times': [] 
                 }
 
-            if init_velocity == 'random':
+            else:
                 velocity = np.random.rand(2)
                 velocity /= np.linalg.norm(velocity, ord=2)
                 particle = {
-                'particle_number'  : i,
-                'velocity'         : velocity,
-                'position'         : pos,
-                'number_collisions': 0,
-                'collision_times'  : []                   
+                    'particle_number': i,
+                    'velocity': velocity,
+                    'position': pos,
+                    'number_collisions': 0,
+                    'collision_times': []                   
                 }    
 
-            self.particles[f'particle_{i}'] =  particle
+            self.particles[f'particle_{i}'] = particle
+
+    def _compute_pdf_data(self) -> Generator[Any, Any, Any]:
+        
+        while True:
+
+            cosine_angles = np.zeros(self.num_particles)
+        
+            for i, particle in enumerate(self.particles.values()):
+                cosine_angles[i] = float(np.cos(
+                        np.arctan(
+                            particle['velocity'][1]/particle['velocity'][0]
+                            )
+                        ))
+
+            self.cosine_angles[f'time_{self.env.now}'] = cosine_angles
+
+            yield self.env.timeout(self.time_between_measures)
 
     def _calculate_collision_time(self,
                                   particle: int
@@ -78,34 +99,34 @@ class ParticleEnviroment():
             cumulative_wait_time = 0
 
             time = calculate_circle_collision(
-                position = particle['position'],
-                velocity = particle['velocity'],
-                radius   = self.sigma
+                position=particle['position'],
+                velocity=particle['velocity'],
+                radius=self.sigma
             )
 
-            while time == False:
+            while not time:
 
                 square_time = calculate_square_collision(
-                    position = particle['position'],
-                    velocity = particle['velocity'],    
-                    length = self.box_length               
+                    position=particle['position'],
+                    velocity=particle['velocity'],    
+                    length=self.box_length               
                 )
 
                 collision_point = calculate_collision_point(
-                    position = particle['position'],
-                    velocity = particle['velocity'],
-                    time_to_collision = square_time
+                    position=particle['position'],
+                    velocity=particle['velocity'],
+                    time_to_collision=square_time
                 )
 
                 cumulative_wait_time += square_time
 
-                #collision with x
+                # collision with x
                 if abs(collision_point[0]) == self.box_length/2:
 
                     new_position = collision_point - \
                         2*np.array([collision_point[0], 0])
                     
-                #collision with y
+                # collision with y
                 else:
 
                     new_position = collision_point - \
@@ -113,11 +134,11 @@ class ParticleEnviroment():
 
                 particle['position'] = new_position
 
-                #recalculate wait time till collision with circle
+                # recalculate wait time till collision with circle
                 time = calculate_circle_collision(
-                    position = particle['position'],
-                    velocity = particle['velocity'],
-                    radius   = self.sigma
+                    position=particle['position'],
+                    velocity=particle['velocity'],
+                    radius=self.sigma
                 )
                 
                 if cumulative_wait_time > self.run_time:
@@ -127,19 +148,19 @@ class ParticleEnviroment():
 
             if cumulative_wait_time < 0:
                 print(particle['position'])
-                print(np.linalg.norm(particle['position'], ord = 2))
+                print(np.linalg.norm(particle['position'], ord=2))
 
             yield self.env.timeout(cumulative_wait_time)
 
             new_position = calculate_collision_point(
-                position = particle['position'],
-                velocity = particle['velocity'],
-                time_to_collision = time
+                position=particle['position'],
+                velocity=particle['velocity'],
+                time_to_collision=time
             )
 
             new_velocity = calulate_reflection(
-                position = new_position,
-                velocity = particle['velocity']
+                position=new_position,
+                velocity=particle['velocity']
             )
 
             particle['position'] = new_position
@@ -154,31 +175,33 @@ class ParticleEnviroment():
         for i in range(self.num_particles):
             particle = self.particles[f'particle_{i}']
 
-            #x-component of velocity is 0
+            # x-component of velocity is 0
             if particle['velocity'][0] == 0:
                 
-                #if x-position is within circle
+                # if x-position is within circle
                 if abs(particle['position'][0]) < self.sigma:
                     self.env.process(self._calculate_collision_time(i))
 
-                #will never intercept 
+                # will never intercept 
                 else:
                     continue
             
-            #y-component of velocity is 0
+            # y-component of velocity is 0
             elif particle['velocity'][1] == 0:
 
-                #if y-position is within circle
+                # if y-position is within circle
                 if abs(particle['position'][1]) < self.sigma:
                     self.env.process(self._calculate_collision_time(i))
 
-                #will never intercept 
+                # will never intercept 
                 else:
                     continue
 
             else:
                 self.env.process(self._calculate_collision_time(i))
+        
+        self.env.process(self._compute_pdf_data())
 
-        self.env.run(until = self.run_time)
+        self.env.run(until=self.run_time)
 
         print(f'Sim complete total collisions: {self.cumulative_collisions}')
