@@ -131,8 +131,8 @@ class particle:
         
         col_pos_array = np.array([col_x,col_y])
         
-        p = math.atan(col_y/col_x)
-        unit_notmal_vector = np.array([math.cos(p),math.sin(p)])
+        col_vec = np.array([col_x, col_y])
+        unit_notmal_vector = col_vec/np.linalg.norm(col_vec, ord=2)
         velocity_array = np.array([self.velocity_x,self.velocity_y])
         v_new = velocity_array-2*(np.dot(velocity_array,unit_notmal_vector))*unit_notmal_vector
         new_pos = (1-collision_time)*v_new + col_pos_array
