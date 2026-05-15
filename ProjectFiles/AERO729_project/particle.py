@@ -7,12 +7,18 @@ class Particle():
 
     def __init__(self,
                  initial_pos: NDArray,
-                 initial_velocity: NDArray
+                 initial_velocity: NDArray,
+                 sigma: float,
+                 epsilon: float,
+                 mass: float = 1
                  ):
 
         self.pos: NDArray = initial_pos
         self.vel: NDArray = initial_velocity
         self.force: NDArray = np.zeros(2)
+        self.sigma: float = sigma
+        self.epsilon: float = epsilon,
+        self.mass: float = mass,
         self.trajectory = []
 
     @property
@@ -55,7 +61,12 @@ class Particle():
         """
 
         # calculate the distance
-    
+        dist = np.linalg.norm(self.pos - other_pos)
+
+        # calculate the gradient
+        mult = (48*self.epsilon)/(self.sigma**2)
+
+
 
     def increment_force(self,
                         force: NDArray
@@ -69,22 +80,6 @@ class Particle():
 
     def step(self) -> NDArray:
         pass
-class ParticleEnviroment():
 
-    def __init__(self,
-                 x_bounds: NDArray,
-                 y_bounds: NDArray,
-                 cutoff_radius: float
-                 ):
-
-        self.x_bounds: NDArray = x_bounds 
-
-        self.y_bounds: NDArray = y_bounds
-
-        self.particle_count = 0
-
-        self.particle_dict = {}
-
-        self.cutoff_radius = cutoff_radius
 
 
