@@ -19,7 +19,8 @@ class Particle():
         self.sigma: float = sigma
         self.epsilon: float = epsilon,
         self.mass: float = mass,
-        self.trajectory = []
+        self.trajectory = [initial_pos]
+        self.velocities = [initial_velocity]
 
     @property
     def position(self) -> NDArray: return self.pos
@@ -65,21 +66,32 @@ class Particle():
 
         # calculate the gradient
         mult = (48*self.epsilon)/(self.sigma**2)
+        fp = (self.sigma/dist)**8
+        sp = (self.sigma/dist)**14
+        diff = self.pos - other_pos
+        lmd = mult*(fp - sp)
+        force = -lmd*diff
 
-
+        return force
 
     def increment_force(self,
-                        force: NDArray
+                        new_force: NDArray
                         ) -> NDArray:
-        
-        pass
+        self.force += new_force
 
 
     def clear_force(self) -> None:
         self.force = np.zeros(2)
 
-    def step(self) -> NDArray:
-        pass
+    def step(self, del_t) -> NDArray:
+        """
+        Steps forward del_t time steps 
+        """
+        acceleration = self.force/self.mass
+        new_velocty = del_t*acceleration + self.velocity
+        new_pos = del_t*new_velocty + self.pos
+
+
 
 
 
