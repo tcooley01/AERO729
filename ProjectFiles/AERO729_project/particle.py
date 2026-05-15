@@ -86,11 +86,23 @@ class Particle():
     def step(self, del_t) -> NDArray:
         """
         Steps forward del_t time steps 
+
+        Params
+        ------
+        del_t: float
+            time increment
         """
         acceleration = self.force/self.mass
         new_velocty = del_t*acceleration + self.velocity
         new_pos = del_t*new_velocty + self.pos
 
+        self.trajectory.append(new_pos)
+        self.velocities.append(new_velocty)
+
+        self.velocity = new_velocty
+        self.pos = new_pos
+
+        return new_pos
 
 
 
