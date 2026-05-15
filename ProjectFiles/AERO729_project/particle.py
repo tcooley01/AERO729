@@ -17,11 +17,15 @@ class Particle():
         self.vel: NDArray = initial_velocity
         self.force: NDArray = np.zeros(2)
         self.sigma: float = sigma
-        self.epsilon: float = epsilon,
-        self.mass: float = mass,
-        self.trajectory = [initial_pos]
-        self.velocities = [initial_velocity]
+        self.epsilon: float = epsilon
+        self.mass: float = mass
+        self.trajectory = []
+        self.velocities = []
+       
 
+    """
+    Create settrs and gettrs
+    """
     @property
     def position(self) -> NDArray: return self.pos
 
@@ -40,6 +44,25 @@ class Particle():
                  ) -> None:
         self.vel = new_vel
 
+    #@property
+    #def force(self) -> NDArray: return self.force
+#
+    #@force.setter
+    #def force(self,
+    #          new_force: NDArray
+    #          ) -> None:
+    #    self.force = new_force
+
+    @property
+    def hyperparameters(self) -> dict:
+        
+        hyp_dict = {
+            'mass' : self.mass,
+            'epsilon': self.epsilon,
+            'sigma': self.sigma
+        }
+
+        return hyp_dict
 
     def calculate_force(self,
                         other_pos: NDArray,
@@ -65,7 +88,7 @@ class Particle():
         dist = np.linalg.norm(self.pos - other_pos)
 
         # calculate the gradient
-        mult = 48*self.epsilon/(self.sigma**2)
+        mult = 48*self.epsilon/self.sigma**2
         fp = (self.sigma/dist)**8
         sp = (self.sigma/dist)**14
         diff = self.pos - other_pos
