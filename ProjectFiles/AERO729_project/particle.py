@@ -65,7 +65,7 @@ class Particle():
         dist = np.linalg.norm(self.pos - other_pos)
 
         # calculate the gradient
-        mult = (48*self.epsilon)/(self.sigma**2)
+        mult = 48*self.epsilon/(self.sigma**2)
         fp = (self.sigma/dist)**8
         sp = (self.sigma/dist)**14
         diff = self.pos - other_pos
@@ -92,6 +92,7 @@ class Particle():
         del_t: float
             time increment
         """
+        #TODO: Make sure that if force is zero it still works
         acceleration = self.force/self.mass
         new_velocty = del_t*acceleration + self.velocity
         new_pos = del_t*new_velocty + self.pos
