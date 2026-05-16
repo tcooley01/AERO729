@@ -44,15 +44,6 @@ class Particle():
                  ) -> None:
         self.vel = new_vel
 
-    #@property
-    #def force(self) -> NDArray: return self.force
-#
-    #@force.setter
-    #def force(self,
-    #          new_force: NDArray
-    #          ) -> None:
-    #    self.force = new_force
-
     @property
     def hyperparameters(self) -> dict:
         
