@@ -6,13 +6,15 @@ from numpy.typing import NDArray\
 class Particle():
 
     def __init__(self,
+                 index: int,
                  initial_pos: NDArray,
                  initial_velocity: NDArray,
                  sigma: float,
                  epsilon: float,
                  mass: float = 1
                  ):
-
+        
+        self.index = index
         self.pos: NDArray = initial_pos
         self.vel: NDArray = initial_velocity
         self.force: NDArray = np.zeros(2)

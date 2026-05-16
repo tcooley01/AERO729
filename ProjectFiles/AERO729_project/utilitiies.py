@@ -73,4 +73,4 @@ def calculate_box_width(tol: float,
     canidate_2 = max(
         second_roots[np.where(~np.iscomplex(second_roots))]
     )
-    return np.real(max(canidate_1, canidate_2))
+    return float(np.real(max(canidate_1, canidate_2)))
