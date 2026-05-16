@@ -10,7 +10,7 @@ from utilitiies import calculate_box_width
 class SimulationEnviroment():
 
     def __init__(self,
-                 particles: Union[int, list[tuple]],
+                 particles: Union[int, list[Particle]],
                  env_height: float,
                  env_width: float,
                  tolerance: float,
@@ -29,8 +29,7 @@ class SimulationEnviroment():
 
             If int then the enviroment creates that many particles and chooses random\n
             initial positions and velocities for each of them. If a list is passed in\n
-            it should be a list of tuples where the frst element is each particles\n
-            initial position and the second is their initial velocity. 
+            it should be a list of Particles. 
 
         env_height: float
 
@@ -69,6 +68,8 @@ class SimulationEnviroment():
         self.width: float = env_width
         self.tolerance: float = tolerance
         self.del_t: float = del_t
+        self.sigma: float = sigma,
+        self.epsilon: float = epsilon
 
         # calculate the minimum sub-grid box sizes
         min_size = calculate_box_width(
@@ -100,16 +101,53 @@ class SimulationEnviroment():
         )
 
         # build dictionary which tracks which particles are in which grid spaces
+        # TODO: I am not particularly happy with this method of tracking indeces
+        # there is probably a better way as this is N^2 in the number of boxes
+        # may look into later.
         self.grid_node_dict: dict = {
-            (i, j) : [] for i in range(self.num_width_bounds) for j in range(self.num_height_boxes)
+            (i, j) : [] for i in range(self.num_width_boxes) for j in range(self.num_height_boxes)
         }
+
+        # list of all particles for ease of access for plotting and data analytics 
+        self.particle_list = []
 
         # create particles in the enviroment
         if isinstance(particles, int):
-            pass
+        
+            for i in range(particles):
+
+                # generate initial positions and velocities
+                init_pos = np.random.rand(2)*np.array([self.width, self.height])
+                init_vel = np.random.rand(2)*2 - 1
+                init_vel /= np.linalg.norm(init_vel)
+
+                particle = Particle(
+                    index=i,
+                    initial_pos=init_pos,
+                    initial_velocity=init_vel,
+                    sigma=self.sigma,
+                    epsilon=self.epsilon
+                )
+
+                # figure out index of the grid the particle belongs to and add to dict and list
+                x_ind = int((init_pos[0]%self.width)//self.sub_width)
+                y_ind = int((init_pos[1]%self.height)//self.sub_height)
+                self.grid_node_dict[(x_ind, y_ind)].append(particle)
+                self.particle_list.append(particle)
+
         
         elif isinstance(particles, list):
-            pass
+            
+            for particle in particles:
+                
+                if not isinstance(particle, Particle):
+                    raise ValueError('SimulationEnviroment expected a list or Parcitles')
+                
+                x_ind = int((particle.position[0]%self.width)//self.sub_width)
+                y_ind = int((particle.position[1]%self.height)//self.sub_height)
+                self.grid_node_dict[(x_ind, y_ind)].append(particle)
+                self.particle_list.append(particle)
+
 
         else:
 
