@@ -15,8 +15,7 @@ class SimulationEnviroment():
                  env_width: float,
                  tolerance: float,
                  sigma: float,
-                 epsilon: float,
-                 del_t: float
+                 epsilon: float
                  ) -> None:
         """
         Enviroment for molecular dynamics sim, creates and keeps track of particles 
@@ -51,10 +50,6 @@ class SimulationEnviroment():
         epsilon: float
 
             the depth of th well in the Lennard-Jones potential
-        
-        del_t: flaot
-
-            change in time for one time step.
 
         Notes
         -----
@@ -67,8 +62,7 @@ class SimulationEnviroment():
         self.height: float = env_height
         self.width: float = env_width
         self.tolerance: float = tolerance
-        self.del_t: float = del_t
-        self.sigma: float = sigma,
+        self.sigma: float = sigma
         self.epsilon: float = epsilon
 
         # calculate the minimum sub-grid box sizes
@@ -101,9 +95,6 @@ class SimulationEnviroment():
         )
 
         # build dictionary which tracks which particles are in which grid spaces
-        # TODO: I am not particularly happy with this method of tracking indeces
-        # there is probably a better way as this is N^2 in the number of boxes
-        # may look into later.
         self.grid_node_dict: dict = {
             (i, j) : [] for i in range(self.num_width_boxes) for j in range(self.num_height_boxes)
         }
@@ -126,12 +117,15 @@ class SimulationEnviroment():
                     initial_pos=init_pos,
                     initial_velocity=init_vel,
                     sigma=self.sigma,
-                    epsilon=self.epsilon
+                    epsilon=self.epsilon,
+                    env_width=self.width,
+                    env_height=self.height
                 )
 
                 # figure out index of the grid the particle belongs to and add to dict and list
                 x_ind = int((init_pos[0]%self.width)//self.sub_width)
                 y_ind = int((init_pos[1]%self.height)//self.sub_height)
+                particle.grid_position = np.array([x_ind, y_ind])
                 self.grid_node_dict[(x_ind, y_ind)].append(particle)
                 self.particle_list.append(particle)
 
@@ -153,3 +147,231 @@ class SimulationEnviroment():
 
             raise ValueError('particles must be either an int or a list')
         
+
+    def calculate_particle_force(self,
+                                 particle: Particle
+                                 ) -> None:
+        
+        """
+        Calculates the force acting on a given particle for each other particle in its own cell 
+        or neighboring cells.
+
+        Params
+        ------
+
+        particle: Particle
+
+            the particle of which the force acting on it is to be calculated
+
+        """
+
+        grid_key = (int(particle.grid_position[0]), int(particle.grid_position[1]))
+
+        # first calculate the force on the particle from particles in its own grid space
+        for othr_prtcl in self.grid_node_dict[grid_key]:
+
+            if particle is othr_prtcl:
+                continue
+
+            force = particle.calculate_force(
+                other_pos=othr_prtcl.position
+            )
+
+            particle.increment_force(
+                new_force=force
+            )
+        
+        # Now we go through and calculate for each adjacent grid space
+
+        # right no vertical movement
+        grid_key = (
+            int((particle.grid_position[0]+1)%self.num_width_boxes), 
+            int(particle.grid_position[1])
+            )
+
+        for othr_prtcl in self.grid_node_dict[grid_key]:
+
+            force = particle.calculate_force(
+                other_pos=othr_prtcl.position
+            )
+
+            particle.increment_force(
+                new_force=force
+            )
+
+        # left no vertical
+        grid_key = (
+            int((particle.grid_position[0]-1)%self.num_width_boxes), 
+            int(particle.grid_position[1])
+            )
+
+        for othr_prtcl in self.grid_node_dict[grid_key]:
+
+            force = particle.calculate_force(
+                other_pos=othr_prtcl.position
+            )
+
+            particle.increment_force(
+                new_force=force
+            )
+
+        # up no horizontal
+        grid_key = (
+            int(particle.grid_position[0]), 
+            int((particle.grid_position[1]+1)%self.num_height_boxes)
+            )
+
+        for othr_prtcl in self.grid_node_dict[grid_key]:
+
+            force = particle.calculate_force(
+                other_pos=othr_prtcl.position
+            )
+
+            particle.increment_force(
+                new_force=force
+            )
+
+        # down no horizontal
+        grid_key = (
+            int(particle.grid_position[0]), 
+            int((particle.grid_position[1]-1)%self.num_height_boxes)
+            )
+
+        for othr_prtcl in self.grid_node_dict[grid_key]:
+
+            force = particle.calculate_force(
+                other_pos=othr_prtcl.position
+            )
+
+            particle.increment_force(
+                new_force=force
+            )
+
+        # up right
+        grid_key = (
+            int((particle.grid_position[0]+1)%self.num_width_boxes), 
+            int((particle.grid_position[1]+1)%self.num_height_boxes)
+            )
+
+        for othr_prtcl in self.grid_node_dict[grid_key]:
+
+            force = particle.calculate_force(
+                other_pos=othr_prtcl.position
+            )
+
+            particle.increment_force(
+                new_force=force
+            )
+
+        # up left
+        grid_key = (
+            int((particle.grid_position[0]-1)%self.num_width_boxes), 
+            int((particle.grid_position[1]+1)%self.num_height_boxes)
+            )
+
+        for othr_prtcl in self.grid_node_dict[grid_key]:
+
+            force = particle.calculate_force(
+                other_pos=othr_prtcl.position
+            )
+
+            particle.increment_force(
+                new_force=force
+            )
+
+        # down right
+        grid_key = (
+            int((particle.grid_position[0]+1)%self.num_width_boxes), 
+            int((particle.grid_position[1]-1)%self.num_height_boxes)
+            )
+
+        for othr_prtcl in self.grid_node_dict[grid_key]:
+
+            force = particle.calculate_force(
+                other_pos=othr_prtcl.position
+            )
+
+            particle.increment_force(
+                new_force=force
+            )
+
+        # down left
+        grid_key = (
+            int((particle.grid_position[0]-1)%self.num_width_boxes), 
+            int((particle.grid_position[1]-1)%self.num_height_boxes)
+            )
+
+        for othr_prtcl in self.grid_node_dict[grid_key]:
+
+            force = particle.calculate_force(
+                other_pos=othr_prtcl.position
+            )
+
+            particle.increment_force(
+                new_force=force
+            )
+
+    def run_sim(self,
+                duration: float,
+                del_t: float
+                ) -> None:
+        """
+        Main driver code of the simulation, at each time step loops through the particles
+        in each particles own and neighbouring grid spaces, then updates there positions 
+        and does the bookkeeping regarding new grid assignments
+
+        Params
+        ------
+
+        duration: float
+
+            How long to run the sim for
+
+        del_t: float
+
+            size of each time step
+        
+        Notes
+        -----
+
+       if del_t doesn't evenly divide duration the floor is taken for th enumber of timesteps
+        """
+
+        num_steps = math.floor(duration/del_t)
+
+        for i in range(num_steps):
+        
+            # calculate force acting on each particle
+            for prtcl in self.particle_list:
+
+                self.calculate_particle_force(
+                    particle=prtcl
+                )
+        
+
+            # step each particle and figure out its grid position
+            for prtcl in self.particle_list:
+
+                grid_key = (
+                    int(prtcl.grid_position[0]), 
+                    int(prtcl.grid_position[1])
+                    )
+
+                _ = prtcl.step(
+                    del_t=del_t
+                )
+
+                x_ind = int((prtcl.position[0]%self.width)//self.sub_width)
+                y_ind = int((prtcl.position[1]%self.height)//self.sub_height)
+
+                new_grid_idx = np.array([x_ind, y_ind])
+
+                if not np.array_equal(new_grid_idx, prtcl.grid_position):
+
+                    _ = self.grid_node_dict[grid_key].remove(prtcl)
+
+                    self.grid_node_dict[(x_ind, y_ind)].append(prtcl)
+
+                    prtcl.grid_position = new_grid_idx
+
+                prtcl.clear_force()

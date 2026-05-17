@@ -11,18 +11,25 @@ class Particle():
                  initial_velocity: NDArray,
                  sigma: float,
                  epsilon: float,
+                 env_width: float,
+                 env_height: float,
                  mass: float = 1
                  ):
         
         self.index = index
+        self.grid_pos = 'unassigned'
         self.pos: NDArray = initial_pos
         self.vel: NDArray = initial_velocity
         self.force: NDArray = np.zeros(2)
         self.sigma: float = sigma
         self.epsilon: float = epsilon
+        self.env_width: float = env_width
+        self.env_height: float = env_height
         self.mass: float = mass
         self.trajectory = []
         self.velocities = []
+        self.trajectory.append(initial_pos)
+        self.velocities.append(initial_velocity)
        
 
     """
@@ -45,6 +52,15 @@ class Particle():
                  new_vel: NDArray
                  ) -> None:
         self.vel = new_vel
+
+    @property
+    def grid_position(self) -> NDArray: return self.grid_pos
+
+    @grid_position.setter
+    def grid_position(self,
+                      new_grid_pos
+                      ) -> None:
+        self.grid_pos = new_grid_pos
 
     @property
     def hyperparameters(self) -> dict:
@@ -112,6 +128,12 @@ class Particle():
         acceleration = self.force/self.mass
         new_velocty = del_t*acceleration + self.velocity
         new_pos = del_t*new_velocty + self.pos
+
+        # new pos needs to have bc taken into acount
+        new_x = new_pos[0]%self.env_width
+        new_y = new_pos[1]%self.env_height
+
+        new_pos = np.array([new_x, new_y])
 
         self.trajectory.append(new_pos)
         self.velocities.append(new_velocty)
