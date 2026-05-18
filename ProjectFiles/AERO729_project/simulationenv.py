@@ -106,7 +106,7 @@ class SimulationEnviroment():
         if isinstance(particles, int):
         
             for i in range(particles):
-
+                # TODO: look into initializtion of velocity
                 # generate initial positions and velocities
                 init_pos = np.random.rand(2)*np.array([self.width, self.height])
                 init_vel = np.random.rand(2)*2 - 1
@@ -119,7 +119,9 @@ class SimulationEnviroment():
                     sigma=self.sigma,
                     epsilon=self.epsilon,
                     env_width=self.width,
-                    env_height=self.height
+                    env_height=self.height,
+                    grid_width=self.sub_width,
+                    grid_height=self.sub_height,
                 )
 
                 # figure out index of the grid the particle belongs to and add to dict and list

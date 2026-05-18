@@ -13,6 +13,8 @@ class Particle():
                  epsilon: float,
                  env_width: float,
                  env_height: float,
+                 grid_width: float,
+                 grid_height:float,
                  mass: float = 1
                  ):
         
@@ -25,6 +27,8 @@ class Particle():
         self.epsilon: float = epsilon
         self.env_width: float = env_width
         self.env_height: float = env_height
+        self.grid_width: float = grid_width
+        self.grid_height: float = grid_height
         self.mass: float = mass
         self.trajectory = []
         self.velocities = []
@@ -74,7 +78,7 @@ class Particle():
         return hyp_dict
 
     def calculate_force(self,
-                        other_pos: NDArray,
+                        other_pos: NDArray
                         ) -> NDArray:
         """
         Calculate the force between two interacting particles with a 
@@ -94,7 +98,40 @@ class Particle():
         """
 
         # calculate the distance
+        # TODO: boundarys currently cause this to crap out 
+        # this must be fixed
         dist = np.linalg.norm(self.pos - other_pos)
+
+        if dist == 0:
+            raise Exception(f'got zero')
+
+        if dist > np.sqrt(4*(self.grid_width**2) + 4*(self.grid_height**2)):
+            
+            # case I am in the far left
+            if self.grid_pos[0] == 0:
+
+                shifted_x = other_pos[0] - self.env_width
+                other_pos[0] = shifted_x
+
+            # case other is on left
+            else: 
+
+                shifted_x = other_pos[0] + self.env_width
+                other_pos[0] = shifted_x
+        
+            # case I am on bottom
+            if self.grid_pos[1] == 0:
+
+                shifted_y = other_pos[1] - self.env_height
+                other_pos[1] = shifted_y
+            
+            # case other is on bottom
+            else:
+
+                shifted_y = other_pos[1] + self.env_height
+                other_pos[1] = shifted_y
+
+            
 
         # calculate the gradient
         mult = 48*self.epsilon/self.sigma**2
