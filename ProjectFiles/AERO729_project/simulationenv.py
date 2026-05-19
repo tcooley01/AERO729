@@ -108,9 +108,15 @@ class SimulationEnviroment():
             for i in range(particles):
                 # TODO: look into initializtion of velocity
                 # generate initial positions and velocities
+                # TODO: Look into initializing postions randomly then 
+                # doing gradient descent to find viable 
                 init_pos = np.random.rand(2)*np.array([self.width, self.height])
-                init_vel = np.random.rand(2)*2 - 1
-                init_vel /= np.linalg.norm(init_vel)
+
+                # TODO: current init velovity is zero idk if this is smart
+                # currently going to make zero init velocity
+                # init_vel = np.random.rand(2)*2 - 1
+                # init_vel /= np.linalg.norm(init_vel)
+                init_vel = np.zeros(2)
 
                 particle = Particle(
                     index=i,
@@ -149,6 +155,45 @@ class SimulationEnviroment():
 
             raise ValueError('particles must be either an int or a list')
         
+
+    def steepest_descent_initialization(self,
+                                        gamma: float = 1e-3,
+                                        num_iters: int = 1000
+                                        ) -> None:
+
+        """
+        This will be a gradient descent initialization that is going to calculate gradient but 
+        then update initial position in the direction of minima, this will hopefully converge
+        to physically plausible initial positions. Updates with standard GD:
+
+                                    x_new = x_old - gamma*Grad(U)
+
+        Parameters
+        ----------
+        
+        gamma: float
+            
+            GD step size
+        
+        num_iters: int
+
+            number of iterations
+        """
+
+        for _ in range(num_iters):
+
+            for prtcl in self.particle_list:
+
+                self.calculate_particle_force(
+                    particle=prtcl
+                )
+
+            for prtcl in self.particle_list:
+
+                old_pos = prtcl.position
+                prtcl.position = old_pos - gamma*prtcl.force
+            
+            prtcl.clear_force()
 
     def calculate_particle_force(self,
                                  particle: Particle
