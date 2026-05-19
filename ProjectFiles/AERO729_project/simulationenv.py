@@ -112,6 +112,9 @@ class SimulationEnviroment():
                 # doing gradient descent to find viable 
                 init_pos = np.random.rand(2)*np.array([self.width, self.height])
 
+                if init_pos[0] > 1 or init_pos[1] > 1:
+                    print(init_pos)
+
                 # TODO: current init velovity is zero idk if this is smart
                 # currently going to make zero init velocity
                 # init_vel = np.random.rand(2)*2 - 1
@@ -191,7 +194,33 @@ class SimulationEnviroment():
             for prtcl in self.particle_list:
 
                 old_pos = prtcl.position
-                prtcl.position = old_pos - gamma*prtcl.force
+                new_pos = old_pos + gamma*prtcl.force
+
+                new_x = new_pos[0]%self.width
+                new_y = new_pos[1]%self.height
+                prtcl.position = np.array([new_x, new_y])
+                
+                if prtcl.position[0] > 1 or prtcl.position[1] > 1:
+                    print(prtcl.position)
+                
+                x_ind = int((prtcl.position[0]%self.width)//self.sub_width)
+                y_ind = int((prtcl.position[1]%self.height)//self.sub_height)
+
+                new_grid_idx = np.array([x_ind, y_ind])
+
+                grid_key = (
+                    int(prtcl.grid_position[0]), 
+                    int(prtcl.grid_position[1])
+                    )
+
+
+                if not np.array_equal(new_grid_idx, prtcl.grid_position):
+
+                    _ = self.grid_node_dict[grid_key].remove(prtcl)
+
+                    self.grid_node_dict[(x_ind, y_ind)].append(prtcl)
+
+                    prtcl.grid_position = new_grid_idx
             
             prtcl.clear_force()
 
