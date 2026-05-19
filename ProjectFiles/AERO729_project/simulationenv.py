@@ -222,7 +222,7 @@ class SimulationEnviroment():
 
                     prtcl.grid_position = new_grid_idx
             
-            prtcl.clear_force()
+                prtcl.clear_force()
 
     def calculate_particle_force(self,
                                  particle: Particle
