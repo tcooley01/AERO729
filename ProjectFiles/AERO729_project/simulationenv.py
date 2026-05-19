@@ -5,7 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from particle import Particle
-from utilitiies import calculate_box_width
+from utilities import calculate_box_width
 
 class SimulationEnviroment():
 
